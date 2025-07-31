@@ -7,12 +7,17 @@ import io
 from datetime import datetime
 from utils.image_processor import PDFImageProcessor
 
+@st.cache_resource
+def get_processor():
+    """Cached function to initialize and reuse the PDFImageProcessor."""
+    return PDFImageProcessor()
+
 def main():
     st.title("PM's PDF to Banner Image Generator")
     st.markdown("Upload the magazine PDF to generate the social sharing and cover image.")
     
-    # Initialize the processor
-    processor = PDFImageProcessor()
+    # Initialize the processor using the cached function
+    processor = get_processor()
     
     # File upload section
     st.header("Upload PDF File")

@@ -30,7 +30,7 @@ class PDFImageProcessor:
             page = doc.load_page(0)
             
             # Render the page to a pixmap (image)
-            pix = page.get_pixmap(dpi=300)  # Higher DPI for better quality
+            pix = page.get_pixmap(dpi=150)  # Lower DPI for better quality
             
             # Convert the pixmap to a PIL Image
             img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
