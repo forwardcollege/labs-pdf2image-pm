@@ -1,10 +1,16 @@
-[project]
-name = "repl-nix-workspace"
+[tool.poetry]
+name = "labs-pdf2image-pm"
 version = "0.1.0"
-description = "Add your description here"
-requires-python = ">=3.11"
-dependencies = [
-    "pdf2image>=1.17.0",
-    "pillow>=11.3.0",
-    "streamlit>=1.47.1",
-]
+description = "A Streamlit application to convert PDF pages to images."
+authors = ["Streamlit App"]
+package-mode = false
+
+[tool.poetry.dependencies]
+python = ">=3.11"
+pdf2image = ">=1.17.0"
+pillow = ">=11.3.0"
+streamlit = ">=1.47.1"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
