@@ -1,17 +1,17 @@
 import os
 import tempfile
-from pdf2image import convert_from_path
+import fitz  # PyMuPDF
 from PIL import Image
 
 class PDFImageProcessor:
-    """Handles PDF to image conversion and background processing"""
+    """Handles PDF to image conversion and background processing using PyMuPDF"""
     
     def __init__(self):
         self.temp_files = []
     
     def pdf_to_jpeg(self, pdf_path):
         """
-        Convert the first page of a PDF to JPEG format
+        Convert the first page of a PDF to JPEG format using PyMuPDF
         
         Args:
             pdf_path (str): Path to the input PDF file
@@ -20,19 +20,30 @@ class PDFImageProcessor:
             str: Path to the generated JPEG file
         """
         try:
-            # Convert the first page of the PDF to an image
-            images = convert_from_path(pdf_path, first_page=1, last_page=1)
+            # Open the PDF with PyMuPDF
+            doc = fitz.open(pdf_path)
             
-            if not images:
+            if not doc or doc.page_count == 0:
                 raise ValueError("No pages found in PDF or PDF could not be processed")
+            
+            # Get the first page
+            page = doc.load_page(0)
+            
+            # Render the page to a pixmap (image)
+            pix = page.get_pixmap(dpi=300)  # Higher DPI for better quality
+            
+            # Convert the pixmap to a PIL Image
+            img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
             
             # Create temporary file for JPEG output
             with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as tmp_file:
                 jpeg_output_path = tmp_file.name
             
-            # Save the first page as JPEG
-            images[0].save(jpeg_output_path, 'JPEG', quality=95)
+            # Save the image as JPEG
+            img.save(jpeg_output_path, 'JPEG', quality=95)
             self.temp_files.append(jpeg_output_path)
+            
+            doc.close()
             
             return jpeg_output_path
             

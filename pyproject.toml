@@ -7,7 +7,7 @@ package-mode = false
 
 [tool.poetry.dependencies]
 python = ">=3.11"
-pdf2image = ">=1.17.0"
+pymupdf = ">=1.23.26"
 pillow = ">=11.3.0"
 streamlit = ">=1.47.1"
 
