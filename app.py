@@ -18,7 +18,17 @@ def main():
     
     # Initialize the processor using the cached function
     processor = get_processor()
-    
+
+    # Initialize session state for generated images
+    if 'img_bytes' not in st.session_state:
+        st.session_state.img_bytes = None
+    if 'cover_bytes' not in st.session_state:
+        st.session_state.cover_bytes = None
+    if 'uploaded_filename' not in st.session_state:
+        st.session_state.uploaded_filename = None
+    if 'cover_filename' not in st.session_state:
+        st.session_state.cover_filename = None
+
     # File upload section
     st.header("Upload PDF File")
     uploaded_file = st.file_uploader(
@@ -28,104 +38,90 @@ def main():
     )
     
     if uploaded_file is not None:
+        # If a new file is uploaded, clear the previous state to avoid showing old results
+        if uploaded_file.name != st.session_state.uploaded_filename:
+            st.session_state.img_bytes = None
+            st.session_state.cover_bytes = None
+            st.session_state.uploaded_filename = uploaded_file.name
+            st.session_state.cover_filename = None
+            
         # Display file info
         st.success(f"✅ File uploaded: {uploaded_file.name} ({uploaded_file.size} bytes)")
         
         # Generate button
         if st.button("Generate Banner Image", type="primary"):
             try:
-                # Show progress
                 progress_bar = st.progress(0)
                 status_text = st.empty()
-                
-                # Save uploaded file temporarily
-                status_text.text("Saving uploaded file...")
-                progress_bar.progress(20)
                 
                 with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_file:
                     tmp_file.write(uploaded_file.getbuffer())
                     pdf_path = tmp_file.name
                 
-                # Initialize variables for cleanup
-                jpeg_path = None
-                final_image_path = None
+                jpeg_path, final_image_path = None, None
                 
                 try:
-                    # Process the PDF
                     status_text.text("Converting PDF to image...")
                     progress_bar.progress(40)
-                    
-                    # Convert PDF to JPEG
                     jpeg_path = processor.pdf_to_jpeg(pdf_path)
                     
                     status_text.text("Applying background and scaling...")
                     progress_bar.progress(70)
-                    
-                    # Apply background and scaling
-                    final_image_path = processor.center_and_fit_image_with_padding(
-                        jpeg_path, 
-                        "assets/banner_bg.jpg"
-                    )
+                    final_image_path = processor.center_and_fit_image_with_padding(jpeg_path, "assets/banner_bg.jpg")
                     
                     status_text.text("Finalizing image...")
                     progress_bar.progress(90)
                     
-                    # Load the final image for display and download
                     with open(final_image_path, 'rb') as img_file:
-                        img_bytes = img_file.read()
+                        st.session_state.img_bytes = img_file.read()
                     
-                    # Load the cover image (first page only) for separate download
                     with open(jpeg_path, 'rb') as cover_file:
-                        cover_bytes = cover_file.read()
+                        st.session_state.cover_bytes = cover_file.read()
+                    
+                    current_date = datetime.now()
+                    st.session_state.cover_filename = f"{current_date.strftime('%m_%Y')}_cover.jpg"
                     
                     progress_bar.progress(100)
                     status_text.text("✅ Image generated successfully!")
                     
-                    # Display the result
-                    st.header("Generated Banner Image")
-                    st.image(img_bytes, caption="Generated Banner Image", use_container_width=True)
-                    
-                    # Generate filename with current month and year
-                    current_date = datetime.now()
-                    cover_filename = f"{current_date.strftime('%m_%Y')}_cover.jpg"
-                    
-                    # Download buttons in columns
-                    col1, col2 = st.columns(2)
-                    
-                    with col1:
-                        st.download_button(
-                            label="Download Banner Image",
-                            data=img_bytes,
-                            file_name=f"banner_{uploaded_file.name.replace('.pdf', '.jpg')}",
-                            mime="image/jpeg",
-                            use_container_width=True
-                        )
-                    
-                    with col2:
-                        st.download_button(
-                            label="Download Cover Only",
-                            data=cover_bytes,
-                            file_name=cover_filename,
-                            mime="image/jpeg",
-                            use_container_width=True
-                        )
-                    
                 finally:
-                    # Clean up temporary files
                     cleanup_files = [pdf_path]
-                    if jpeg_path:
-                        cleanup_files.append(jpeg_path)
-                    if final_image_path:
-                        cleanup_files.append(final_image_path)
+                    if jpeg_path: cleanup_files.append(jpeg_path)
+                    if final_image_path: cleanup_files.append(final_image_path)
                     processor.cleanup_temp_files(cleanup_files)
                     
             except Exception as e:
                 st.error(f"❌ Error processing PDF: {str(e)}")
                 st.info("Please ensure the PDF file is valid and not corrupted.")
-    
-    else:
+                st.session_state.img_bytes = None # Clear state on error
+                st.session_state.cover_bytes = None
+
+    # Display results and download buttons if they exist in session state
+    if st.session_state.img_bytes:
+        st.header("Generated Banner Image")
+        st.image(st.session_state.img_bytes, caption="Generated Banner Image", use_container_width=True)
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            st.download_button(
+                label="Download Banner Image",
+                data=st.session_state.img_bytes,
+                file_name=f"banner_{st.session_state.uploaded_filename.replace('.pdf', '.jpg')}",
+                mime="image/jpeg",
+                use_container_width=True
+            )
+        with col2:
+            st.download_button(
+                label="Download Cover Only",
+                data=st.session_state.cover_bytes,
+                file_name=st.session_state.cover_filename,
+                mime="image/jpeg",
+                use_container_width=True
+            )
+            
+    elif uploaded_file is None:
         st.info("👆 Please upload a PDF file to get started.")
-    
+
     # Instructions section
     with st.expander("ℹ️ How it works"):
         st.markdown("""
