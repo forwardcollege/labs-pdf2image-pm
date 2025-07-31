@@ -29,8 +29,9 @@ class PDFImageProcessor:
             # Get the first page
             page = doc.load_page(0)
             
-            # Render the page to a pixmap (image)
-            pix = page.get_pixmap(dpi=150)  # Lower DPI for better quality
+            # Use the page's TrimBox to get a better-cropped image.
+            # The TrimBox defines the intended dimensions of the finished page.
+            pix = page.get_pixmap(clip=page.trimbox, dpi=150)
             
             # Convert the pixmap to a PIL Image
             img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
