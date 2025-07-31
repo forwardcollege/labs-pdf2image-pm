@@ -1,5 +1,3 @@
-print("--- App script started ---")
-
 import streamlit as st
 import tempfile
 import os
@@ -7,25 +5,19 @@ import base64
 from PIL import Image
 import io
 from datetime import datetime
-
-print("--- Importing utils.image_processor ---")
 from utils.image_processor import PDFImageProcessor
-print("--- Imported utils.image_processor ---")
 
 @st.cache_resource
 def get_processor():
     """Cached function to initialize and reuse the PDFImageProcessor."""
-    print("--- Calling get_processor to initialize PDFImageProcessor ---")
     return PDFImageProcessor()
 
 def main():
-    print("--- Main function started ---")
     st.title("PM's PDF to Banner Image Generator")
     st.markdown("Upload the magazine PDF to generate the social sharing and cover image.")
     
     # Initialize the processor using the cached function
     processor = get_processor()
-    print("--- PDFImageProcessor has been initialized ---")
     
     # File upload section
     st.header("Upload PDF File")
@@ -148,8 +140,6 @@ def main():
         
         **Note:** The generated image maintains the aspect ratio of your PDF page while fitting it proportionally within the banner background.
         """)
-    print("--- End of main function ---")
 
 if __name__ == "__main__":
-    print("--- Script being executed directly ---")
     main()

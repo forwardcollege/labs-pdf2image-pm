@@ -1,18 +1,12 @@
-print("--- image_processor.py script started ---")
-
 import os
 import tempfile
-print("--- Importing fitz ---")
 import fitz  # PyMuPDF
-print("--- Imported fitz ---")
 from PIL import Image
 
-print("--- Defining PDFImageProcessor class ---")
 class PDFImageProcessor:
     """Handles PDF to image conversion and background processing using PyMuPDF"""
     
     def __init__(self):
-        print("--- PDFImageProcessor.__init__ called ---")
         self.temp_files = []
     
     def pdf_to_jpeg(self, pdf_path):
@@ -131,5 +125,3 @@ class PDFImageProcessor:
                 print(f"Warning: Could not clean up temporary file {file_path}: {e}")
         
         self.temp_files.clear()
-
-print("--- End of image_processor.py ---")
